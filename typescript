@@ -1,0 +1,23 @@
+Script started on 2025-10-15 15:51:12-05:00 [TERM="xterm-256color" TTY="/dev/pts/8" COLUMNS="109" LINES="12"]
+[?2004h[elizabethw@vm-instunix-10] (1)$ Sc[K[KL[KCD[K[Kcd tests/
+[?2004l[?2004h[elizabethw@vm-instunix-10] (2)$ make PartA
+[?2004lmake: *** No rule to make target 'PartA'.  Stop.
+[?2004h[elizabethw@vm-instunix-10] (3)$ make part A 
+[?2004lmake: *** No rule to make target 'part'.  Stop.
+[?2004h[elizabethw@vm-instunix-10] (4)$ make part A [K[K[KA
+[?2004l./test101  #one block can be allocated
+./test102  #four blocks can be allocated (splitting must work)
+./test103  #alloc many different sized payloads
+./test104  #one block alloc, one fail
+./test105  #one block 2048, then 2047 fails
+./test110  #one alloc, then write to memory and check it is there
+./test121  #one alloc, confirm ptr returned is multiple of 8
+./test122  #four allocs confirm ptrs all multiple of 8
+./test123  #nine allocs random size, confirm each return is multiple of 8
+[?2004h[elizabethw@vm-instunix-10] (5)$ Succwesss[K[K[K[K[K[K[Kccuwe[K[Ks[Kes[K[K[Kue[K[Kessful!!!!! IOI[K[K[KY_Y[K[K[KGreat[K[K[K[K[KHH[K[KI_IU[K[K[K[KO[KG[K
+[?2004lSuccessfulmake partAmake partA! 
+Successfulmake: command not found
+[?2004h[elizabethw@vm-instunix-10] (6)$ exit
+[?2004lexit
+
+Script done on 2025-10-15 15:52:35-05:00 [COMMAND_EXIT_CODE="127"]
