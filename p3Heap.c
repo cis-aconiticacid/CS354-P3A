@@ -16,17 +16,20 @@
 #include <fcntl.h>
 #include <string.h>
 #include "p3Heap.h"
+#define true 1
+#define false 0
 
 /*
  * This structure serves as the header for each allocated and free block.
  * It also serves as the footer for each free block.
  */
-typedef struct blockHeader {           
+typedef struct blockHeader
+{
 
     /*
      * 1) The size of each heap block must be a multiple of 8
      * 2) Heap blocks have blockHeaders that contain size and status bits
-     * 3) Free heap blocks contain a footer, but we can use the blockHeader 
+     * 3) Free heap blocks contain a footer, but we can use the blockHeader
      *
      * All heap blocks have a blockHeader with size and status
      * Free heap blocks have a blockHeader as its footer with size only
@@ -36,24 +39,24 @@ typedef struct blockHeader {
      *   Bit0 == 0 => free block
      *   Bit0 == 1 => allocated block
      *
-     *   Bit1 => second last bit 
+     *   Bit1 => second last bit
      *   Bit1 == 0 => previous block is free
      *   Bit1 == 1 => previous block is allocated
-     * 
-     * Start Heap: 
+     *
+     * Start Heap:
      *  The blockHeader for the first block of heap is after skipping 4 bytes.
      *  This ensures alignment requirements can be met.
-     * 
-     * End Mark: 
+     *
+     * End Mark:
      *  The end of the available memory is indicated using a size_status of 1.
-     * 
+     *
      * Examples:
-     * 
+     *
      * 1. Allocated block of size 24 bytes:
      *    Allocated Block Header:
      *      If the previous block is free      p-bit=0 size_status would be 25
      *      If the previous block is allocated p-bit=1 size_status would be 27
-     * 
+     *
      * 2. Free block of size 24 bytes:
      *    Free Block Header:
      *      If the previous block is free      p-bit=0 size_status would be 24
@@ -63,13 +66,13 @@ typedef struct blockHeader {
      */
     int size_status;
 
-} blockHeader;         
+} blockHeader;
 
-/* Global variable - DO NOT CHANGE NAME or TYPE. 
+/* Global variable - DO NOT CHANGE NAME or TYPE.
  * It must point to the first block in the heap and is set by init_heap()
  * i.e., the block at the lowest address.
  */
-blockHeader *heap_start = NULL;     
+blockHeader *heap_start = NULL;
 
 /* Size of heap allocation padded to round to the nearest page size.
  */
@@ -80,18 +83,15 @@ int alloc_size;
  * TODO: add global variables as needed by your function
  */
 
-
-
-
-/* 
+/*
  * Function for allocating 'size' bytes of heap memory.
  * Argument size: requested size for the payload
  * Returns address of allocated block (payload) on success.
  * Returns NULL on failure.
  *
  * This function must:
- * - Check size - Return NULL if size < 1 
- * - Determine block size rounding up to a multiple of 8 
+ * - Check size - Return NULL if size < 1
+ * - Determine block size rounding up to a multiple of 8
  *   and possibly add padding as a result.
  *
  * - Use BEST-FIT PLACEMENT POLICY to chose a free block
@@ -100,29 +100,77 @@ int alloc_size;
  *   - 1. Update all heap blocks as needed for any affected blocks
  *   - 2. Return the address of the allocated block payload
  *
- * - If the BEST-FIT block that is found is large enough to split 
+ * - If the BEST-FIT block that is found is large enough to split
  *   - 1. SPLIT the free block into two valid heap blocks:
  *         1. an allocated block
  *         2. a free block
- *         NOTE: both blocks must meet heap block requirements 
- *       - Update all heap block header(s) and footer(s) 
+ *         NOTE: both blocks must meet heap block requirements
+ *       - Update all heap block header(s) and footer(s)
  *              as needed for any affected blocks.
  *   - 2. Return the address of the allocated block payload
  *
  *   Return NULL if unable to find and allocate block of required size
  *
  * Note: payload address that is returned is NOT the address of the
- *       block header. It is the address of the start of the 
+ *       block header. It is the address of the start of the
  *       available memory for the requester.
  *
  * Tips: Be careful with pointer arithmetic and scale factors.
  */
-void* alloc(int size) {     
-    //TODO: Your code goes in here.
-    return NULL;
-} 
+void *alloc(int size)
+{
+    // TODO: Your code goes in here.
+    if (size < 1)
+    {
+        return NULL;
+    }
+    int total_size = size + sizeof(blockHeader);
+    if (total_size % 8 != 0)
+    {
+        total_size += (8 - (total_size % 8));
+    }
+    blockHeader *current = heap_start;
+    blockHeader *best_fit = NULL;
+    int best_size = __INT_MAX__;
+    while (current->size_status != 1)
+    {
+        int current_size = current->size_status & ~0x3; // Mask out the status bits
+        if ((current->size_status & 0x1) == false ){ // Check if block is free and large enough
+            if (current_size >= total_size && current_size < best_size)
+            {
+                best_fit = current;
+                best_size = current_size;
+            }
+        }
+        current = current + (current_size / sizeof(blockHeader)); // Move to the next block
+    }
+    if (best_fit == NULL)
+    {
+        return NULL; // No suitable block found
+    }
+    int remaining_size = best_size - total_size;
+    blockHeader *split = NULL;
+    // Core: Don't change the pbit of the split block during split, only change the one after splitting free block
+    int pbit = best_fit->size_status & 0x2; // store p-bit
+    if (remaining_size >= 8){
+        // Split the block
+        split = (blockHeader *)((char*)best_fit + total_size);
+        split->size_status = remaining_size;
+        blockHeader *footer = (blockHeader *)((char*)split + remaining_size - sizeof(blockHeader)); // Fuck C address computatioon
+        footer->size_status = remaining_size; // No status in footer
+        best_fit->size_status = total_size | 0x1; // change size
+    }else{
+        best_fit->size_status = best_size| 0x1; // No split, use entire block
+    }
+    best_fit->size_status |= pbit; // Preserve p-bit
+    blockHeader *next_block = best_fit + (best_fit->size_status & ~0x3) / sizeof(blockHeader);
+    if(next_block->size_status != 1) {
+        next_block->size_status |= 0x2; // Set p-bit of next block
+    }
+    return (void *)(best_fit + 1);
+}
 
-/* 
+/*
  * Function for freeing up a previously allocated block.
  * Argument ptr: address of the block to be freed up.
  * Returns 0 on success.
@@ -138,49 +186,52 @@ void* alloc(int size) {
  * they will be immediately coalesced into one larger free block.
  * so free blocks require a footer (blockHeader works) to store the size
  *
- * TIP: work on getting immediate coalescing to work after your code 
+ * TIP: work on getting immediate coalescing to work after your code
  *      can pass the tests in partA and partB of tests/ directory.
  *      Submit code that passes partA and partB to Canvas before continuing.
- */                    
-int free_block(void *ptr) {    
-    //TODO: Your code goes in here.
+ */
+int free_block(void *ptr)
+{
+    // TODO: Your code goes in here.
     return -1;
-} 
+}
 
-
-/* 
+/*
  * Initializes the memory allocator.
  * Called ONLY once by a program.
  * Argument sizeOfRegion: the size of the heap space to be allocated.
  * Returns 0 on success.
  * Returns -1 on failure.
- */                    
-int init_heap(int sizeOfRegion) {    
+ */
+int init_heap(int sizeOfRegion)
+{
 
-    static int allocated_once = 0; //prevent multiple myInit calls
+    static int allocated_once = 0; // prevent multiple myInit calls
 
-    int   pagesize; // page size
-    int   padsize;  // size of padding when heap size is not a multiple of page size
-    void* mmap_ptr; // pointer to memory mapped area
-    int   fd;
+    int pagesize;   // page size
+    int padsize;    // size of padding when heap size is not a multiple of page size
+    void *mmap_ptr; // pointer to memory mapped area
+    int fd;
 
-    blockHeader* end_mark;
+    blockHeader *end_mark;
 
-    if (0 != allocated_once) {
-        fprintf(stderr, 
+    if (0 != allocated_once)
+    {
+        fprintf(stderr,
                 "Error:mem.c: InitHeap has allocated space during a previous call\n");
         return -1;
     }
 
-    if (sizeOfRegion <= 0) {
+    if (sizeOfRegion <= 0)
+    {
         fprintf(stderr, "Error:mem.c: Requested block size is not positive\n");
         return -1;
     }
 
-    // Get the pagesize from O.S. 
+    // Get the pagesize from O.S.
     pagesize = getpagesize();
 
-    // Calculate padsize, as padding is required to round up sizeOfRegion 
+    // Calculate padsize, as padding is required to round up sizeOfRegion
     // to a multiple of pagesize
     padsize = sizeOfRegion % pagesize;
     padsize = (pagesize - padsize) % pagesize;
@@ -189,12 +240,14 @@ int init_heap(int sizeOfRegion) {
 
     // Using mmap to allocate memory
     fd = open("/dev/zero", O_RDWR);
-    if (-1 == fd) {
+    if (-1 == fd)
+    {
         fprintf(stderr, "Error:mem.c: Cannot open /dev/zero\n");
         return -1;
     }
     mmap_ptr = mmap(NULL, alloc_size, PROT_READ | PROT_WRITE, MAP_PRIVATE, fd, 0);
-    if (MAP_FAILED == mmap_ptr) {
+    if (MAP_FAILED == mmap_ptr)
+    {
         fprintf(stderr, "Error:mem.c: mmap cannot allocate space\n");
         allocated_once = 0;
         return -1;
@@ -207,10 +260,10 @@ int init_heap(int sizeOfRegion) {
 
     // Initially there is only one big free block in the heap.
     // Skip first 4 bytes for double word alignment requirement.
-    heap_start = (blockHeader*) mmap_ptr + 1;
+    heap_start = (blockHeader *)mmap_ptr + 1;
 
     // Set the end mark
-    end_mark = (blockHeader*)((void*)heap_start + alloc_size);
+    end_mark = (blockHeader *)((void *)heap_start + alloc_size);
     end_mark->size_status = 1;
 
     // Set size in header
@@ -221,11 +274,11 @@ int init_heap(int sizeOfRegion) {
     heap_start->size_status += 2;
 
     // Set the footer
-    blockHeader *footer = (blockHeader*) ((void*)heap_start + alloc_size - 4);
+    blockHeader *footer = (blockHeader *)((void *)heap_start + alloc_size - 4);
     footer->size_status = alloc_size;
 
     return 0;
-} 
+}
 
 /* STUDENTS MAY EDIT THIS FUNCTION, but do not change function header.
  * TIP: Review this implementation to see one way to traverse through
@@ -233,85 +286,92 @@ int init_heap(int sizeOfRegion) {
  *
  * Can be used for DEBUGGING to help you visualize your heap structure.
  * It traverses heap blocks and prints info about each block found.
- * 
+ *
  * Prints out a list of all the blocks including this information:
- * No.      : serial number of the block 
+ * No.      : serial number of the block
  * Status   : free/used (allocated)
  * Prev     : status of previous block free/used (allocated)
- * t_Begin  : address of the first byte in the block (where the header starts) 
- * t_End    : address of the last byte in the block 
+ * t_Begin  : address of the first byte in the block (where the header starts)
+ * t_End    : address of the last byte in the block
  * t_Size   : size of the block as stored in the block header
- */                     
-void disp_heap() {     
+ */
+void disp_heap()
+{
 
-    int    counter;
-    char   status[6];
-    char   p_status[6];
-    char * t_begin = NULL;
-    char * t_end   = NULL;
-    int    t_size;
+    int counter;
+    char status[6];
+    char p_status[6];
+    char *t_begin = NULL;
+    char *t_end = NULL;
+    int t_size;
 
     blockHeader *current = heap_start;
     counter = 1;
 
-    int used_size =  0;
-    int free_size =  0;
-    int is_used   = -1;
+    int used_size = 0;
+    int free_size = 0;
+    int is_used = -1;
 
-    fprintf(stdout, 
+    fprintf(stdout,
             "********************************** HEAP: Block List ****************************\n");
     fprintf(stdout, "No.\tStatus\tPrev\tt_Begin\t\tt_End\t\tt_Size\n");
-    fprintf(stdout, 
+    fprintf(stdout,
             "--------------------------------------------------------------------------------\n");
 
-    while (current->size_status != 1) {
-        t_begin = (char*)current;
+    while (current->size_status != 1)
+    {
+        t_begin = (char *)current;
         t_size = current->size_status;
 
-        if (t_size & 1) {
+        if (t_size & 1)
+        {
             // LSB = 1 => used block
             strcpy(status, "alloc");
             is_used = 1;
             t_size = t_size - 1;
-        } else {
+        }
+        else
+        {
             strcpy(status, "FREE ");
             is_used = 0;
         }
 
-        if (t_size & 2) {
+        if (t_size & 2)
+        {
             strcpy(p_status, "alloc");
             t_size = t_size - 2;
-        } else {
+        }
+        else
+        {
             strcpy(p_status, "FREE ");
         }
 
-        if (is_used) 
+        if (is_used)
             used_size += t_size;
-        else 
+        else
             free_size += t_size;
 
         t_end = t_begin + t_size - 1;
 
-        fprintf(stdout, "%d\t%s\t%s\t0x%08lx\t0x%08lx\t%4i\n", counter, status, 
+        fprintf(stdout, "%d\t%s\t%s\t0x%08lx\t0x%08lx\t%4i\n", counter, status,
                 p_status, (unsigned long int)t_begin, (unsigned long int)t_end, t_size);
 
-        current = (blockHeader*)((char*)current + t_size);
+        current = (blockHeader *)((char *)current + t_size);
         counter = counter + 1;
     }
 
-    fprintf(stdout, 
+    fprintf(stdout,
             "--------------------------------------------------------------------------------\n");
-    fprintf(stdout, 
+    fprintf(stdout,
             "********************************************************************************\n");
     fprintf(stdout, "Total used size = %4d\n", used_size);
     fprintf(stdout, "Total free size = %4d\n", free_size);
     fprintf(stdout, "Total size      = %4d\n", used_size + free_size);
-    fprintf(stdout, 
+    fprintf(stdout,
             "********************************************************************************\n");
     fflush(stdout);
 
-    return;  
-} 
+    return;
+}
 
 //		p3Heap.c		END OF FILE			202509
-                                       
