@@ -1,0 +1,114 @@
+Script started on 2025-10-18 16:00:16-05:00 [TERM="xterm-256color" TTY="/dev/pts/15" COLUMNS="109" LINES="12"]
+[?2004h[elizabethw@vm-instunix-04] (1)$ 
+[7mgdb test101[27mgdb test101
+[?2004l[35;1mGNU gdb (Ubuntu 15.0.50.20240403-0ubuntu1) 15.0.50.20240403-git[m
+Copyright (C) 2024 Free Software Foundation, Inc.
+License GPLv3+: GNU GPL version 3 or later <[32mhttp://gnu.org/licenses/gpl.html[m>
+This is free software: you are free to change and redistribute it.
+There is NO WARRANTY, to the extent permitted by law.
+Type "show copying" and "show warranty" for details.
+This GDB was configured as "x86_64-linux-gnu".
+Type "show configuration" for configuration details.
+For bug reporting instructions, please see:
+[32m<https://www.gnu.org/software/gdb/bugs/>[m.
+Find the GDB manual and other documentation resources online at:
+[?2004h--Type <RET> for more, q to quit, c to continue without paging--list
+[?2004l    <[32mhttp://www.gnu.org/software/gdb/documentation/[m>.
+
+For help, type "help".
+Type "apropos word" to search for commands related to "word"...
+Reading symbols from [32mtest101[m...
+[?2004h(gdb) list
+[?2004l1	[36m// a simple 8 byte allocation[m
+2	[01;34m#include[m [31m<assert.h>[m
+3	[01;34m#include[m [31m<stdlib.h>[m
+4	[01;34m#include[m [31m"p3Heap.h"[m
+5	
+6	[32mint[m [01mmain[m[31m()[m [31m{[m
+7	    [01massert[m[31m([m[01minit_heap[m[31m([m[35m4096[m[31m)[m [31m==[m [35m0[m[31m);[m
+8	    [32mvoid[m[31m*[m ptr [31m=[m [01malloc[m[31m([m[35m8[m[31m);[m
+9	    [01massert[m[31m([mptr [31m!=[m NULL[31m);[m
+10	    [01mexit[m[31m([m[35m0[m[31m);[m
+[?2004h(gdb) [7mbreak main[27m[C[C[C[C[C[Cbreak main
+[?2004lBreakpoint 1 at [34m0x11ee[m: file [32mtest101.c[m, line 7.
+[?2004h(gdb) brd[Keadk[K[Kk 9
+[?2004lBreakpoint 2 at [34m0x122e[m: file [32mtest101.c[m, line 9.
+[?2004h(gdb) run
+[?2004lStarting program: [32m/home/elizabethw/private/cs354/p3/tests/test101[m 
+
+This GDB supports auto-downloading debuginfo from the following URLs:
+  <[32mhttps://debuginfod.ubuntu.com[m>
+[?2004hEnable debuginfod for this session? (y or [n]) y
+[?2004lDebuginfod has been enabled.
+To make this setting permanent, add 'set debuginfod enabled on' to .gdbinit.
+Downloading separate debug info for [32msystem-supplied DSO at 0xf7fc7000[m
+[###                                                                                                      ]                                                                                                             [Thread debugging using libthread_db enabled]
+Using host libthread_db library "[32m/lib/x86_64-linux-gnu/libthread_db.so.1[m".
+
+Breakpoint 1, [33mmain[m () at [32mtest101.c[m:7
+7	    [01massert[m[31m([m[01minit_heap[m[31m([m[35m4096[m[31m)[m [31m==[m [35m0[m[31m);[m
+[?2004h[?2004l[?2004h(gdb) [7mset debuginfod enabled on[27m[C[C[C[C[C[Cset debuginfod enabled on
+[?2004l[?2004h(gdb) [7mnext [27mnext 
+[?2004l8	    [32mvoid[m[31m*[m ptr [31m=[m [01malloc[m[31m([m[35m8[m[31m);[m
+[?2004h[?2004l[?2004h(gdb) step
+[?2004l[33malloc[m ([36msize[m=8) at [32mp3Heap.c[m:152
+152	    [01;34mif[m [31m([msize [31m<[m [35m1[m[31m)[m
+[?2004h[?2004l[?2004h(gdb) list
+[?2004l147	[36m * Tips: Be careful with pointer arithmetic and scale factors.[m
+148	[36m */[m
+149	[32mvoid[m [31m*[m[01malloc[m[31m([m[32mint[m size[31m)[m
+150	[31m{[m
+151	    [36m// TODO: Your code goes in here.[m
+152	    [01;34mif[m [31m([msize [31m<[m [35m1[m[31m)[m
+153	    [31m{[m
+154	        [01;34mreturn[m NULL[31m;[m
+155	    [31m}[m
+156	    [32mint[m total_size [31m=[m size [31m+[m [01;34msizeof[m[31m([mblockHeader[31m);[m
+[?2004h(gdb) print size
+[?2004l[36m$1[m = 8
+[?2004h(gdb) [7mprint sizeof(blockHeader)[27m[C[C[C[C[C[Cprint sizeof(blockHeader)
+[?2004l[36m$2[m = 4
+[?2004h(gdb) [K(gdb) [7mprint heap_start[27m[7m-[27m[7m>size_status [27m[K[A[K(gdb) [7mprint heap_start[27m[7m-[27m[7m>size_status [27m[K[A[K(gdb) [7mprint heap_start->size_status [27m[K(gdb) [7mprint heap_start->size_status [27m[K(gdb) [7mprint heap_start->size_status [27m[K(gdb) [7mprint heap_start->size_status [27m[K(gdb) [7mprint heap_start->size_status [27m[K(gdb) [7mprint heap_start->size_status [27m[K(gdb) [7mprint heap_start->size_status [27m[K(gdb) [7mprint heap_start->size_status [27m[K(gdb) [7mprint heap_start->size_status [27m[C[C[C[C[C[Cprint heap_start->size_status 
+[?2004l[36m$3[m = 4090
+[?2004h(gdb) c[Kpirn[K[K[Krint heap_start 
+[?2004l[36m$4[m = (blockHeader *[36m[m) [34m0xf7fbb004[m
+[?2004h(gdb) print heap_start+sizeof[K[Kof()b)l)o)c)k)H)e)a)d)e)r)
+[?2004l[36m$5[m = (blockHeader *[36m[m) [34m0xf7fbb014[m
+[?2004h(gdb) print (void*)
+[?2004lA syntax error in expression, near the end of `(void*)'.
+[?2004h(gdb) 
+Display all 197 possibilities? (y or n)
+(gdb) 
+[?2004lA syntax error in expression, near the end of `(void*)'.
+[?2004h(gdb) print (void *)
+[?2004lA syntax error in expression, near the end of `(void *)'.
+[?2004h(gdb) d[Kprint (void *)heaps[K_start [C[1@ [C[C[C[C[C[C[C[C[C[C[C[K+sizeof(heap[K[K[K[K[K(blockheader[K[K[K[K[K[KHeader)
+[?2004l[36m$6[m = (void *[36m[m) [34m0xf7fbb008[m
+[?2004h(gdb) continue
+[?2004lContinuing.
+
+Breakpoint 2, [33mmain[m () at [32mtest101.c[m:9
+9	    [01massert[m[31m([mptr [31m!=[m NULL[31m);[m
+[?2004h[?2004l[?2004h(gdb) print ptr
+[?2004l[36m$7[m = (void *[36m[m) [34m0xf7fbb008[m
+[?2004h(gdb) list
+[?2004l4	[01;34m#include[m [31m"p3Heap.h"[m
+5	
+6	[32mint[m [01mmain[m[31m()[m [31m{[m
+7	    [01massert[m[31m([m[01minit_heap[m[31m([m[35m4096[m[31m)[m [31m==[m [35m0[m[31m);[m
+8	    [32mvoid[m[31m*[m ptr [31m=[m [01malloc[m[31m([m[35m8[m[31m);[m
+9	    [01massert[m[31m([mptr [31m!=[m NULL[31m);[m
+10	    [01mexit[m[31m([m[35m0[m[31m);[m
+11	[31m}[m
+[?2004h(gdb) nexyt[K[Kt
+[?2004l10	    [01mexit[m[31m([m[35m0[m[31m);[m
+[?2004h[?2004l[?2004h(gdb) quit
+[?2004l[?2004hA debugging session is active.
+
+	Inferior 1 [process 3160481] will be killed.
+
+Quit anyway? (y or n) y
+[?2004l[?2004h[elizabethw@vm-instunix-04] (2)$ exit
+[?2004lexit
+
+Script done on 2025-10-18 16:08:38-05:00 [COMMAND_EXIT_CODE="0"]

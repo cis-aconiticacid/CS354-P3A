@@ -12,19 +12,23 @@
 // CS Login:         elizabethw
 //
 ///////////////////////////  WORK LOG  //////////////////////////////
-// log (built by git and it's in the github repository) 
-// https://github.com/cis-aconiticacid/CS354-P3A.git
-// commit 69dd3517f7695ea4c9ea68d954f8b3fd7494276c (HEAD -> main, origin/main)
-// Author: Elizabeth Wen <xwen57@wisc.edu>
-// Date:   Wed Oct 15 15:53:21 2025 -0500
-
-//     Test A Pass
-
+// https://github.com/cis-aconiticacid/CS354-P3A
 // commit 09807f2ced7824ae3828c62f9e2739bb83b5aa57
 // Author: Elizabeth Wen <xwen57@wisc.edu>
 // Date:   Wed Oct 15 15:49:46 2025 -0500
 
 //     Complete Part A
+// commit 81c55323cb2767e4b4b5851ef77d270462b74357 (HEAD -> main, origin/main)
+// Author: Elizabeth Wen <xwen57@wisc.edu>
+// Date:   Wed Oct 15 16:07:36 2025 -0500
+
+//     Add Heading and log
+
+// commit 69dd3517f7695ea4c9ea68d954f8b3fd7494276c
+// Author: Elizabeth Wen <xwen57@wisc.edu>
+// Date:   Wed Oct 15 15:53:21 2025 -0500
+
+//     Test A Pass
 /////////////////////////////////////////////////////////////////////////////
 //
 // Copyright 2020-2025 Deb Deppeler based on work by Jim Skrentny
@@ -216,9 +220,43 @@ void *alloc(int size)
  *      Submit code that passes partA and partB to Canvas before continuing.
  */
 int free_block(void *ptr)
+/**
+ * This function is similar to the C library function free(). It frees the block of heap memory containing ptr's payload and returns 0 to indicate success. 
+ * If ptr is NULL, ptr is not 8-byte aligned, not within the range of memory allocated by init_heap(), or points to a free block then this function just returns -1.
+ * When freeing a block, you set the header and footer of the free block, and update the p-bit of the next heap block's header unless the next block is the END_MARK.
+ * CAUTION: Do not set the p-bit of the next heap block if the next heap block is the END MARK. 
+ */
 {
-    // TODO: Your code goes in here.
-    return -1;
+    if (ptr == NULL)
+    {
+        return -1;
+    }
+    if ((size_t)ptr % 8 != 0)
+    {
+        return -1;
+    }
+    if (ptr < (void *)heap_start || ptr >= (void *)heap_start + alloc_size)
+    {
+        return -1;
+    }
+    blockHeader *block_to_free = (blockHeader *)ptr - 1;
+    if ((block_to_free->size_status & 0x1) == false)
+    {
+        return -1;
+    }
+    int pbit= block_to_free->size_status & 0x2; // store p-bit
+    int block_size = block_to_free->size_status & ~0x3; // Mask out the allocated bit
+    block_to_free->size_status = block_size; // Mark as free
+    block_to_free->size_status |= pbit; // Preserve p-bit
+    blockHeader *footer = (blockHeader *)((char *)block_to_free + block_size - sizeof(blockHeader));
+    footer->size_status = block_size; // Set footer
+    blockHeader *next_block = (blockHeader *)((char *)block_to_free + block_size);
+    if (next_block->size_status != 1)
+    {
+        next_block->size_status &= ~0x2; // Clear p-bit of next block
+    }
+    //TODO: Coalescing with previous and next blocks
+    return 0;
 }
 
 /*
