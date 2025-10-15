@@ -1,5 +1,30 @@
 // PLACE YOUR FILE HEADER HERE
+////////////////////////////////////////////////////////////////////////////////
+// Main File:        allocator
+// This File:        p3Heap.c
+// Other Files:      None
+// Semester:         CS 354 Lecture 001 Fall 2025
+// Grade Group:      gg6
+// Instructor:
+//
+// Author:           Xinyang Wen
+// Email:            xwen57@wisc.edu
+// CS Login:         elizabethw
+//
+///////////////////////////  WORK LOG  //////////////////////////////
+// log (built by git and it's in the github repository) 
+// https://github.com/cis-aconiticacid/CS354-P3A.git
+// commit 69dd3517f7695ea4c9ea68d954f8b3fd7494276c (HEAD -> main, origin/main)
+// Author: Elizabeth Wen <xwen57@wisc.edu>
+// Date:   Wed Oct 15 15:53:21 2025 -0500
 
+//     Test A Pass
+
+// commit 09807f2ced7824ae3828c62f9e2739bb83b5aa57
+// Author: Elizabeth Wen <xwen57@wisc.edu>
+// Date:   Wed Oct 15 15:49:46 2025 -0500
+
+//     Complete Part A
 /////////////////////////////////////////////////////////////////////////////
 //
 // Copyright 2020-2025 Deb Deppeler based on work by Jim Skrentny
