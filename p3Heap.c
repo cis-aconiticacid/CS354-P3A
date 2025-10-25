@@ -223,7 +223,7 @@ int free_block(void *ptr)
 /**
  * This function is similar to the C library function free(). It frees the block of heap memory containing ptr's payload and returns 0 to indicate success. 
  * If ptr is NULL, ptr is not 8-byte aligned, not within the range of memory allocated by init_heap(), or points to a free block then this function just returns -1.
- * When freeing a block, you set the header and footer of the free block, and update the p-bit of the next heap block's header unless the next block is the END_MARK.
+ * When freeing a block, ycou set the header and footer of the free block, and update the p-bit of the next heap block's header unless the next block is the END_MARK.
  * CAUTION: Do not set the p-bit of the next heap block if the next heap block is the END MARK. 
  */
 {
@@ -239,23 +239,49 @@ int free_block(void *ptr)
     {
         return -1;
     }
-    blockHeader *block_to_free = (blockHeader *)ptr - 1;
-    if ((block_to_free->size_status & 0x1) == false)
+    blockHeader *freeblock = (blockHeader *)ptr - 1;
+    if ((freeblock->size_status & 0x1) == false)
     {
         return -1;
     }
-    int pbit= block_to_free->size_status & 0x2; // store p-bit
-    int block_size = block_to_free->size_status & ~0x3; // Mask out the allocated bit
-    block_to_free->size_status = block_size; // Mark as free
-    block_to_free->size_status |= pbit; // Preserve p-bit
-    blockHeader *footer = (blockHeader *)((char *)block_to_free + block_size - sizeof(blockHeader));
+    int pbit = freeblock->size_status & 0x2; // store p-bit
+    int block_size = freeblock->size_status & ~0x3;
+    freeblock->size_status = block_size; // Mark as free
+    freeblock->size_status |= pbit; // Preserve p-bit
+    blockHeader *footer = (blockHeader *)((char *)freeblock + block_size - sizeof(blockHeader));
     footer->size_status = block_size; // Set footer
-    blockHeader *next_block = (blockHeader *)((char *)block_to_free + block_size);
+    blockHeader *next_block = (blockHeader *)((char *)freeblock + block_size);
     if (next_block->size_status != 1)
     {
         next_block->size_status &= ~0x2; // Clear p-bit of next block
     }
     //TODO: Coalescing with previous and next blocks
+    // Coalesce with previous block if it's free
+    int newpbit = pbit;
+    if (pbit == 0)
+    {
+        // Find previous block's footer
+        blockHeader *prev_footer = (blockHeader *)((char *)freeblock - sizeof(blockHeader));
+        int prev_block_size = prev_footer->size_status;
+        blockHeader *prev_block = (blockHeader *)((char *)freeblock - prev_block_size);
+        block_size += prev_block_size;
+        newpbit = prev_block->size_status & 0x2; // store p-bit of previous block
+        prev_block->size_status = block_size; 
+
+        freeblock = prev_block; // Update freeblock to the new coalesced block
+        footer->size_status = block_size; 
+    }
+    // Coalesce with next block if it's free
+    next_block = (blockHeader *)((char *)freeblock + block_size);// Update next_block after possible coalescing with previous block
+    if (next_block->size_status != 1 && (next_block->size_status & 0x1) == false)
+    {
+        int next_block_size = next_block->size_status & ~0x3;
+        block_size += next_block_size;
+        freeblock->size_status = block_size; 
+        footer = (blockHeader *)((char *)freeblock + block_size - sizeof(blockHeader));
+        footer->size_status = block_size; 
+    }
+    freeblock->size_status |= newpbit; // Preserve p-bit
     return 0;
 }
 
